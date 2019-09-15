@@ -2,7 +2,7 @@
     1001018
     epark03@uoguelph.ca   */
 
-MAX_BLOCKS 2096
+#define MAX_BLOCKS 4096
 struct ds_counts_structs;
 struct ds_blocks_structs;
 struct ds_file_structs;
