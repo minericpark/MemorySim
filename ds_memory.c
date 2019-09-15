@@ -7,6 +7,14 @@
 struct ds_file_struct ds_file; /*Global variable that holds file pointer and block arrays*/
 struct ds_counts_struct ds_counts; /*Global variable that reads and write counts*/
 
+/*All function declarations*/
+int ds_create (char *filename, long size);
+int ds_init (char *filename);
+long ds_malloc (long amount);
+void ds_free (long start);
+void *ds_read (void *ptr, long start, long bytes);
+long ds_write (long start, void *ptr, long bytes);
+int ds_finish ();
 
 /*
 * struct ds_counts_struct counts
@@ -39,7 +47,16 @@ struct ds_file_struct {
 };
 
 int main () {
-
+	
+	
+	ds_create ("test", 10); /*Testing*/
+	printf ("%s\n", ds_file.fp); /*Testing*/
+	ds_init ("test"); /*Testing*/
+	printf ("%d\n", ds_counts.reads); /*Testing*/
+	printf ("%d\n", ds_counts.writes); /*Testing*/
+	printf ("%d\n", ds_file.block->start);
+	printf ("%d\n", ds_file.block->length);
+	printf ("%c\n", ds_file.block->alloced);
     return (0); /*Program closes*/
 }
 
@@ -49,12 +66,25 @@ int main () {
 */
 int ds_create (char *filename, long size) {
 
+	ds_file.fp = fopen (filename, "wb"); /*File is created with filename in write binary mode*/
+	fwrite (size, sizeof (size), 1, ds_file.fp);
+	ds_file.block->start = 0;
+	ds_file.block->length = size;
+	ds_file.block->alloced = '0';
+	if (ds_file.fp == NULL) { /*File checker*/
+		printf ("Error: file could not be opened\n");
+		exit (-1);
+	}	
+	fclose (ds_file.fp);
 	return (0);
 	
 }
 
 int ds_init (char *filename) {
 	
+	ds_file.fp = fopen (filename, "rb+");
+	ds_counts.reads = 0;
+	ds_counts.writes = 0;
 	return (0);
 	
 }
