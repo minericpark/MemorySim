@@ -16,47 +16,33 @@ void *ds_read (void *ptr, long start, long bytes);
 long ds_write (long start, void *ptr, long bytes);
 int ds_finish ();
 
-/*
-* struct ds_counts_struct counts
-* number of read and write operations
-* performed
-*/
-struct ds_counts_struct {
-	int reads;
-	int writes;
-};
-
-/*
-* struct ds_blocks_struct keeps track of
-* blocks in the binary file
-*/
-struct ds_blocks_struct {
-	long start;
-	long length;
-	char alloced;
-};
-
-/*
-* struct ds_file_struct holds file pointer,
-* opens it in binary in either read/write mode,
-* and holds an array of blocks
-*/
-struct ds_file_struct {
-	FILE *fp;
-	struct ds_blocks_struct block[MAX_BLOCKS];
-};
-
 int main () {
 	
+	char buffer[ds_file.block->length];
+	int i = 0;
+
+	printf ("sizeof(struct ds_counts_struct) = %ld\n", sizeof(struct ds_counts_struct));
+	printf ("sizeof(struct ds_blocks_struct) = %ld\n", sizeof(struct ds_blocks_struct));
+	printf ("sizeof(struct ds_file_struct) = %ld\n", sizeof(struct ds_file_struct));
 	
 	ds_create ("test", 10); /*Testing*/
 	printf ("%s\n", ds_file.fp); /*Testing*/
 	ds_init ("test"); /*Testing*/
 	printf ("%d\n", ds_counts.reads); /*Testing*/
 	printf ("%d\n", ds_counts.writes); /*Testing*/
-	printf ("%d\n", ds_file.block->start);
-	printf ("%d\n", ds_file.block->length);
-	printf ("%c\n", ds_file.block->alloced);
+	printf ("%ld\n", ds_file.block[0].start); /*Testing*/
+	printf ("%ld\n", ds_file.block[0].length); /*Testing*/
+	printf ("%c\n", ds_file.block[0].alloced); /*Testing*/
+
+	printf ("%ld\n", ds_file.block[1].start); /*Testing*/
+	printf ("%ld\n", ds_file.block[1].length); /*Testing*/
+	printf ("%c\n", ds_file.block[1].alloced); /*Testing*/
+
+	for (i = 0; i < ds_file.block->length; i++) { /*Testing*/
+		fread (buffer, 1, ds_file.block->length, ds_file.fp);
+		printf ("Block %d: %s\n", i + 1, buffer);
+	}	
+	
     return (0); /*Program closes*/
 }
 
@@ -66,14 +52,26 @@ int main () {
 */
 int ds_create (char *filename, long size) {
 
-	ds_file.fp = fopen (filename, "wb"); /*File is created with filename in write binary mode*/
-	fwrite (size, sizeof (size), 1, ds_file.fp);
-	ds_file.block->start = 0;
-	ds_file.block->length = size;
-	ds_file.block->alloced = '0';
-	if (ds_file.fp == NULL) { /*File checker*/
+	int i;
+	long *zero = 0;
+
+	if ((ds_file.fp = fopen (filename, "wb")) == NULL) { /*File checker*/
 		printf ("Error: file could not be opened\n");
 		exit (-1);
+	}	
+	fseek (ds_file.fp, 0, SEEK_SET);
+	for (i = 0; i < MAX_BLOCKS; i++) {
+		ds_file.block[i].start = 0;
+		ds_file.block[i].length = 0;
+		ds_file.block[i].alloced = '0';
+	}
+	ds_file.block[0].length = size;
+	for (i = 0; i < MAX_BLOCKS; i++) {
+		fwrite (&ds_file.block[i], sizeof (struct ds_blocks_struct), i, ds_file.fp);
+	}
+	fseek (ds_file.fp, 0, SEEK_END);
+	for (i = 0; i < size; i++) {
+		fwrite (&zero, sizeof (zero), i+1, ds_file.fp);
 	}	
 	fclose (ds_file.fp);
 	return (0);
@@ -101,12 +99,15 @@ void ds_free (long start) {
 
 void *ds_read (void *ptr, long start, long bytes) {
 
+	ds_counts.reads++;
 	return ptr;
 
 }
 
 long ds_write (long start, void *ptr, long bytes) {
 	
+	/*fseek (ds_file.fp, , start);*/
+	ds_counts.writes++;
 	return (0);
 	
 }
