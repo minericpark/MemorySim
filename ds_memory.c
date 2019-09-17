@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "ds_memory.h"
-
+/*#define DEBUG	1*/
 
 struct ds_file_struct ds_file; /*Global variable that holds file pointer and block arrays*/
 struct ds_counts_struct ds_counts; /*Global variable that reads and write counts*/
@@ -17,31 +17,34 @@ long ds_write (long start, void *ptr, long bytes);
 int ds_finish ();
 
 int main () {
+
+	/*#ifdef DEBUG*/
+		int i = 0;
+		char buffer[ds_file.block->length];
+		
+		printf ("Debugging is turned on\n");
+		printf ("sizeof(struct ds_counts_struct) = %ld\n", sizeof(struct ds_counts_struct));
+		printf ("sizeof(struct ds_blocks_struct) = %ld\n", sizeof(struct ds_blocks_struct));
+		printf ("sizeof(struct ds_file_struct) = %ld\n", sizeof(struct ds_file_struct));
 	
-	char buffer[ds_file.block->length];
-	int i = 0;
+		ds_create ("test", 10); /*Testing*/
+		printf ("%s\n", ds_file.fp); /*Testing*/
+		ds_init ("test"); /*Testing*/
+		printf ("%d\n", ds_counts.reads); /*Testing*/
+		printf ("%d\n", ds_counts.writes); /*Testing*/
+		printf ("%ld\n", ds_file.block[0].start); /*Testing*/
+		printf ("%ld\n", ds_file.block[0].length); /*Testing*/
+		printf ("%c\n", ds_file.block[0].alloced); /*Testing*/
 
-	printf ("sizeof(struct ds_counts_struct) = %ld\n", sizeof(struct ds_counts_struct));
-	printf ("sizeof(struct ds_blocks_struct) = %ld\n", sizeof(struct ds_blocks_struct));
-	printf ("sizeof(struct ds_file_struct) = %ld\n", sizeof(struct ds_file_struct));
-	
-	ds_create ("test", 10); /*Testing*/
-	printf ("%s\n", ds_file.fp); /*Testing*/
-	ds_init ("test"); /*Testing*/
-	printf ("%d\n", ds_counts.reads); /*Testing*/
-	printf ("%d\n", ds_counts.writes); /*Testing*/
-	printf ("%ld\n", ds_file.block[0].start); /*Testing*/
-	printf ("%ld\n", ds_file.block[0].length); /*Testing*/
-	printf ("%c\n", ds_file.block[0].alloced); /*Testing*/
+		printf ("%ld\n", ds_file.block[1].start); /*Testing*/
+		printf ("%ld\n", ds_file.block[1].length); /*Testing*/
+		printf ("%c\n", ds_file.block[1].alloced); /*Testing*/
 
-	printf ("%ld\n", ds_file.block[1].start); /*Testing*/
-	printf ("%ld\n", ds_file.block[1].length); /*Testing*/
-	printf ("%c\n", ds_file.block[1].alloced); /*Testing*/
-
-	for (i = 0; i < ds_file.block->length; i++) { /*Testing*/
-		fread (buffer, 1, ds_file.block->length, ds_file.fp);
-		printf ("Block %d: %s\n", i + 1, buffer);
-	}	
+		for (i = 0; i < ds_file.block->length; i++) { /*Testing*/
+			fread (buffer, 1, ds_file.block->length, ds_file.fp);
+			printf ("Block %d: %s\n", i + 1, buffer);
+		}	
+	/*#endif*/
 	
     return (0); /*Program closes*/
 }
@@ -53,8 +56,7 @@ int main () {
 int ds_create (char *filename, long size) {
 
 	int i;
-	long *zero = 0;
-
+	
 	if ((ds_file.fp = fopen (filename, "wb")) == NULL) { /*File checker*/
 		printf ("Error: file could not be opened\n");
 		exit (-1);
@@ -71,8 +73,8 @@ int ds_create (char *filename, long size) {
 	}
 	fseek (ds_file.fp, 0, SEEK_END);
 	for (i = 0; i < size; i++) {
-		fwrite (&zero, sizeof (zero), i+1, ds_file.fp);
-	}	
+		fputs ("0", ds_file.fp);
+	}
 	fclose (ds_file.fp);
 	return (0);
 	
