@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "ds_memory.h"
-/*#define DEBUG	1*/
+#define DEBUG	1
 
 struct ds_file_struct ds_file; /*Global variable that holds file pointer and block arrays*/
 struct ds_counts_struct ds_counts; /*Global variable that reads and write counts*/
@@ -18,33 +18,26 @@ int ds_finish ();
 
 int main () {
 
-	/*#ifdef DEBUG*/
+	#ifdef DEBUG
 		int i = 0;
 		char buffer[ds_file.block->length];
+		int size = 1234;
 		
 		printf ("Debugging is turned on\n");
 		printf ("sizeof(struct ds_counts_struct) = %ld\n", sizeof(struct ds_counts_struct));
 		printf ("sizeof(struct ds_blocks_struct) = %ld\n", sizeof(struct ds_blocks_struct));
 		printf ("sizeof(struct ds_file_struct) = %ld\n", sizeof(struct ds_file_struct));
 	
-		ds_create ("test", 0); /*Testing*/
+		ds_create ("test", size); /*Testing*/
 		printf ("%s\n", ds_file.fp); /*Testing*/
 		ds_init ("test"); /*Testing*/
-		printf ("%d\n", ds_counts.reads); /*Testing*/
-		printf ("%d\n", ds_counts.writes); /*Testing*/
-		printf ("%ld\n", ds_file.block[0].start); /*Testing*/
-		printf ("%ld\n", ds_file.block[0].length); /*Testing*/
-		printf ("%c\n", ds_file.block[0].alloced); /*Testing*/
 
-		printf ("%ld\n", ds_file.block[1].start); /*Testing*/
-		printf ("%ld\n", ds_file.block[1].length); /*Testing*/
-		printf ("%c\n", ds_file.block[1].alloced); /*Testing*/
-
-		for (i = 0; i < ds_file.block->length; i++) { /*Testing*/
-			fread (buffer, 1, ds_file.block->length, ds_file.fp);
-			printf ("Block %d: %s\n", i + 1, buffer);
-		}	
-	/*#endif*/
+		printf ("Block Num	Start	Lenght	Alloced\n");
+		for (i = 0; i < MAX_BLOCKS; i++) {
+			printf ("%d		%ld	%ld 	%d\n", i, ds_file.block[i].start, ds_file.block[i].length, ds_file.block[i].alloced);
+		}
+		printf ("Read = %d, Write = %d", ds_counts.reads, ds_counts.writes);
+	#endif
 	
     return (0); /*Program closes*/
 }
@@ -75,18 +68,21 @@ int ds_create (char *filename, long size) {
 	}
 	fwrite (&zero, sizeof (char) * size, 1, ds_file.fp);
 	/*Don't use for loop, write entire thing for sizeof entire array*/
-	if (fclose (ds_file.fp) == NULL) {
-		ds_file.fp = NULL;
-		return (0);
+	if (fclose (ds_file.fp) == EOF) {
+		printf ("Error: file could not be closed\n");
+		return (1);
 	}
 	
-	return (1);
+	return (0);
 	
 }
 
 int ds_init (char *filename) {
 	
-	ds_file.fp = fopen (filename, "rb+");
+	if ((ds_file.fp = fopen (filename, "rb+")) == NULL) {
+		printf ("Error: file could not be opened\n");
+	}
+	fread (&ds_file, sizeof(ds_file), 0, ds_file.fp);
 	ds_counts.reads = 0;
 	ds_counts.writes = 0;
 	return (0);
