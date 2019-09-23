@@ -1,17 +1,14 @@
 CC=gcc
-CFLAGS=-Wall -ansi -I`
+CFLAGS=-Wall -ansi -Iincludes
 DEP = ds_memory.h
 	
-all: ds_memory.o ds_memory-debug
-	
-ds_memory.o: ds_memory.c $(DEP)
-	$(CC) $(CFLAGS) -c ds_memory.c -o ds_memory.o
+all: ds_memory ds_memory-debug
 
-ds_memory: ds_memory.o
-	$(CC) $(CFLAGS) ds_memory.o -o ds_memory
+ds_memory: ds_memory.c
+	$(CC) $(CFLAGS) ds_memory.c -o ds_memory
 
-ds_memory-debug: ds_memory.o
-	$(CC) $(CFLAGS) -D DEBUG ds_memory.o -o ds_memory
+ds_memory-debug:
+	$(CC) $(CFLAGS) -D DEBUG ds_memory.c -o ds_memory-debug
 
 clean:
 	rm ds_memory.o

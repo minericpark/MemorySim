@@ -27,7 +27,7 @@ int main () {
 		printf ("sizeof(struct ds_blocks_struct) = %ld\n", sizeof(struct ds_blocks_struct));
 		printf ("sizeof(struct ds_file_struct) = %ld\n", sizeof(struct ds_file_struct));
 	
-		ds_create ("test", 10); /*Testing*/
+		ds_create ("test", 0); /*Testing*/
 		printf ("%s\n", ds_file.fp); /*Testing*/
 		ds_init ("test"); /*Testing*/
 		printf ("%d\n", ds_counts.reads); /*Testing*/
@@ -56,27 +56,31 @@ int main () {
 int ds_create (char *filename, long size) {
 
 	int i;
+	char *zero = 0;
 	
 	if ((ds_file.fp = fopen (filename, "wb")) == NULL) { /*File checker*/
 		printf ("Error: file could not be opened\n");
-		exit (-1);
+		return (1);
 	}	
 	fseek (ds_file.fp, 0, SEEK_SET);
 	for (i = 0; i < MAX_BLOCKS; i++) {
 		ds_file.block[i].start = 0;
 		ds_file.block[i].length = 0;
-		ds_file.block[i].alloced = '0';
+		ds_file.block[i].alloced = 0;
 	}
 	ds_file.block[0].length = size;
+	/*Error check when file writes in?*/
 	for (i = 0; i < MAX_BLOCKS; i++) {
-		fwrite (&ds_file.block[i], sizeof (struct ds_blocks_struct), i, ds_file.fp);
+		fwrite (&ds_file.block[i], sizeof (struct ds_blocks_struct), 1, ds_file.fp);
 	}
-	fseek (ds_file.fp, 0, SEEK_END);
-	for (i = 0; i < size; i++) {
-		fputs ("0", ds_file.fp);
+	fwrite (&zero, sizeof (char) * size, 1, ds_file.fp);
+	/*Don't use for loop, write entire thing for sizeof entire array*/
+	if (fclose (ds_file.fp) == NULL) {
+		ds_file.fp = NULL;
+		return (0);
 	}
-	fclose (ds_file.fp);
-	return (0);
+	
+	return (1);
 	
 }
 
