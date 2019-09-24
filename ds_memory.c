@@ -54,6 +54,7 @@ int main () {
 	#endif */
 	
 	long memory;
+	long memory2;
 
 	int i;
 	int size = 1234;
@@ -70,8 +71,11 @@ int main () {
 	printf( "Return value is %ld\n", ds_malloc( 100000) );
 	
 	printf( "Calling ds_malloc( 17 )\n");
-	printf( "Return value is %ld\n", ds_malloc( 17) );
+	memory2 = ds_malloc(17);
+	printf( "Return value is %ld\n", memory2 );
 
+
+	ds_free (memory2);
 	ds_free( memory );
 
 	ds_finish();
@@ -114,12 +118,12 @@ int ds_create (char *filename, long size) {
 	ds_file.block[0].length = size;
 	for (i = 0; i < MAX_BLOCKS; i++) {
 		if (fwrite (&ds_file.block[i], sizeof (struct ds_blocks_struct), 1, ds_file.fp) != 1) {
-			printf ("Error: file could not be written into\n");
+			printf ("Error: file could not be written into or nothing to write!\n");
 			return -1;
 		}
 	}
 	if (fwrite (&zero, sizeof (char) * size, 1, ds_file.fp) != 1) {
-		printf ("Error: file could not be written into\n");
+		printf ("Error: file could not be written into or nothing to write!\n");
 		return -1;
 	}
 	if (fclose (ds_file.fp) == EOF) {
@@ -138,7 +142,7 @@ int ds_init (char *filename) {
 		return -1;
 	}
 	if (fread (&ds_file.block, sizeof(ds_file.block), 1, ds_file.fp) != 1) {
-		printf ("Error: file could not be read\n");
+		printf ("Error: file could not be read or is empty\n");
 		return -1;
 	}
 	ds_counts.reads = 0;
@@ -160,19 +164,21 @@ long ds_malloc (long amount) {
 	
 	for (i = 0; i < MAX_BLOCKS; i++) {
 		if (ds_file.block[i].length >= amount && ds_file.block[i].alloced == 0) {
+			printf ("Discovered block %d, allocating...\n", i);
 			tempStart = ds_file.block[i].start;
 			tempLength = ds_file.block[i].length;
 			ds_file.block[i].length = amount;
 			ds_file.block[i].alloced = 1;
 			for (i = 0; i < MAX_BLOCKS; i++) {
 				if (ds_file.block[i].length == 0 && secondBlockFound == 0) {
+					printf ("Second block found at %d, adjusting...\n", i);
 					secondBlockFound = 1;
 					ds_file.block[i].start = tempStart + amount;
 					ds_file.block[i].length = tempLength - amount;
 					ds_file.block[i].alloced = 0;
 				}
 			}
-			return ds_file.block[i].start;
+			return tempStart;
 		}			
 	}	
 	return (-1);
@@ -182,10 +188,13 @@ long ds_malloc (long amount) {
 void ds_free (long start) {
 	
 	int i;
+	int blockFreed = 0;
 	
 	for (i = 0; i < MAX_BLOCKS; i++) {
-		if (ds_file.block[i].start == start) {
+		if (ds_file.block[i].start == start && blockFreed == 0) {
+			printf ("Discovered block %d allocated, freeing...\n", i);
 			ds_file.block[i].alloced = 0;
+			blockFreed = 1;
 		}
 	}
 	
@@ -217,7 +226,7 @@ int ds_finish () {
 	/*fwrite (&ds_file, sizeof(ds_file), 0, ds_file.fp);*/
 	for (i = 0; i < MAX_BLOCKS; i++) {
 		if (fwrite (&ds_file.block[i], sizeof (struct ds_blocks_struct), 1, ds_file.fp) != 1) {
-			printf ("Error: file could not be written into\n");
+			printf ("Error: file could not be written into or nothing to write!\n");
 			return -1;
 		}
 	}
