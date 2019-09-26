@@ -10,6 +10,15 @@ struct ds_counts_structs;
 struct ds_blocks_structs;
 struct ds_file_structs;
 
+/*All function declarations*/
+int ds_create (char *filename, long size);
+int ds_init (char *filename);
+long ds_malloc (long amount);
+void ds_free (long start);
+void *ds_read (void *ptr, long start, long bytes);
+long ds_write (long start, void *ptr, long bytes);
+int ds_finish ();
+
 /*
 * struct ds_counts_struct counts
 * number of read and write operations

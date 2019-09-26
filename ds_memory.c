@@ -3,20 +3,12 @@
 #include <math.h>
 #include "ds_memory.h"
 /*#define DEBUG*/
-/*#define TEST*/
+/*#define TEST2*/
 
 struct ds_file_struct ds_file; /*Global variable that holds file pointer and block arrays*/
 struct ds_counts_struct ds_counts; /*Global variable that reads and write counts*/
 
-/*All function declarations*/
-int ds_create (char *filename, long size);
-int ds_init (char *filename);
-long ds_malloc (long amount);
-void ds_free (long start);
-void *ds_read (void *ptr, long start, long bytes);
-long ds_write (long start, void *ptr, long bytes);
-int ds_finish ();
-
+/*
 int main () {
 
 	#ifdef DEBUG
@@ -55,7 +47,7 @@ int main () {
 		float f1,f2;
 		double d1, d2;
 
-		long memory[12];     /* array to hold all memory allocations */
+		long memory[12];     
  
 		int i;
 
@@ -72,13 +64,11 @@ int main () {
 		d1 = 100.0;
 		d2 = 120.0;
 
-		/* create binary file */
+
 		ds_create( "test.bin", 1234);
 
-		/* load block array and reset counts */
 		ds_init( "test.bin");
 
-		/* allocate and write chars, free one of them */
 		memory[0] = ds_malloc( sizeof(c1) );
 		ds_write( memory[0], &c1, sizeof(c1) );
 
@@ -87,7 +77,6 @@ int main () {
 
 		ds_free( memory[1] ); 
 
-		/* allocate and write shorts, free one of them */
 		memory[2] = ds_malloc( sizeof(s1) );
 		ds_write( memory[2], &s1, sizeof(s1) );
 
@@ -96,7 +85,6 @@ int main () {
 
 		ds_free( memory[3] ); 
 
-		/* allocate and write ints, free one of them */
 		memory[4] = ds_malloc( sizeof(i1) );
 		ds_write( memory[4], &i1, sizeof(i1) );
 
@@ -105,7 +93,6 @@ int main () {
 
 		ds_free( memory[5] );
 
-		/* allocate and write longs, free one of them */
 		memory[6] = ds_malloc( sizeof(l1) );
 		ds_write( memory[6], &l1, sizeof(l1) );
 
@@ -114,7 +101,6 @@ int main () {
 
 		ds_free( memory[7] );
 
-		/* allocate and write floats, free one of them */
 		memory[8] = ds_malloc( sizeof(f1) );
 		ds_write( memory[8], &f1, sizeof(f1) );
 
@@ -123,7 +109,6 @@ int main () {
  
 		ds_free( memory[9] );
 
-		/* allocate and write doubles, free one of them */
 		memory[10] = ds_malloc( sizeof(d1) );
 		ds_write( memory[10], &d1, sizeof(d1) );
 
@@ -133,7 +118,7 @@ int main () {
 		ds_free( memory[11] );
 
 		printf( "Remaining memory allocations:\n");
-		for(i=0;i<12;i+=2) /* skip every other location because we freed them */
+		for(i=0;i<12;i+=2) 
 		{
 			printf( "%ld\n", memory[i] );
 		}
@@ -153,7 +138,6 @@ int main () {
 		double d1;
 
 		long memory[6] = { 0, 2, 6, 14, 10, 30};
-		/* values copied from output of ds_write */
 		ds_init( "test.bin");
 
 		ds_read( &c1, memory[0],sizeof( c1 ) );
@@ -168,8 +152,9 @@ int main () {
 	
 	#endif
 	
-    return (0); /*Program closes*/
+    return (0); 
 }
+*/
 
 void ds_test_init() {
 	
