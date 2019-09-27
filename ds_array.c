@@ -3,22 +3,23 @@
 #include <math.h>
 #include "ds_array.h"
 #include "ds_memory.h"
-/*#define DEBUG*/
+#define DEBUG
 /*#define TEST*/
 
 long elements;
 
 int main(int argc, char **argv) {
 	
-	
+	/*
 	ds_create ("array.bin", 2048);
 	ds_create_array();
-	show_array();
-	
+	show_memory();
+	*/
 
-	/*
 	int value;
 	long index;
+
+	ds_create_array();
 
 	if(argc!=3)
 	{ 
@@ -34,7 +35,8 @@ int main(int argc, char **argv) {
 	ds_insert( value, index );
 
 	ds_finish_array();
-	*/
+	show_array();
+
 
 	return 0;
 	
@@ -42,11 +44,13 @@ int main(int argc, char **argv) {
 
 int ds_create_array() {
 	
+	long initialValue = 0;
+	
 	if (ds_init("array.bin") == -1) {
 		printf ("Error: ds_init failed\n");
 		return -1;
 	}
-	if (ds_malloc(sizeof(long)) == -1) {
+	if (ds_malloc(sizeof(initialValue)) == -1) {
 		printf ("Error: initial ds_malloc failed\n");
 		return -1;
 	}
@@ -63,12 +67,29 @@ int ds_create_array() {
 }
 
 /*Test function*/
-void show_array() {
+void show_memory() {
 	
+	printf ("Showing memory");
 	ds_init_array();
 	ds_test_init();
 	printf ("elements = %ld", elements);
 	ds_finish_array();
+	
+}
+
+/*Test function*/
+void show_array() {
+	
+	int i;
+	int value;
+	long location;
+	
+	printf ("Showing array\n");
+	for (i = 0; i < elements; i++) {
+		location = i * sizeof(int) + sizeof(elements);
+		ds_read (&value, location, sizeof(int));
+		printf ("%d %d\n", i, value);
+	}
 	
 }
 
@@ -91,26 +112,63 @@ int ds_replace (int value, long index) {
 int ds_insert (int value, long index) {
 	
 	int oldValue;
-	int newValue = value;
-	int location;
-	int inserted = 0;
+	int newValue;
+	long location;
+	int inserted;
 	int i;
 	
-	location = index * sizeof(int) + sizeof(elements);
-	
+	newValue = value;
+	i = index;
+	inserted = 0;
+	/*
 	for (i = index; i < index + elements; i++) {
+		printf ("index: %d", i);
 		if (index == location && inserted == 0) {
 			ds_read (&oldValue, index, sizeof(int));
 			ds_write (index, &newValue, sizeof(int)); 
 			inserted = 1;
+			#ifdef DEBUG
+				printf ("New: %d, old: %d\n", oldValue, newValue);
+			#endif
 		}
 		else if (inserted == 1) {
 			newValue = oldValue;
 			ds_read (&oldValue, index, sizeof(int));
 			ds_write (index, &newValue, sizeof(int));
+			#ifdef DEBUG
+				printf ("2. New: %d, old: %d\n", oldValue, newValue);
+			#endif
 		}
 	}
+	*/
+	
+	do {
+		location = i * sizeof(int) + sizeof(elements);
+		printf ("location: %ld\n", location);
+		printf ("index: %d\n", i);
+		if (inserted == 0) {
+			ds_read (&oldValue, location, sizeof(int));
+			ds_write (location, &newValue, sizeof(int)); 
+			inserted = 1;
+			#ifdef DEBUG
+				printf ("New: %d, old: %d\n", newValue, oldValue);
+			#endif
+		}
+		else {
+			newValue = oldValue;
+			ds_read (&oldValue, i, sizeof(int));
+			ds_write (i, &newValue, sizeof(int));
+			#ifdef DEBUG
+				printf ("2. New: %d, old: %d\n", oldValue, newValue);
+			#endif
+		}
+		i++;
+	} while (i < elements);
+	
 	if (inserted == 0) {
+		#ifdef DEBUG
+			printf ("Insert failed\n");
+		#endif
 		return -1;
 	}
 	elements++;

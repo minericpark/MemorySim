@@ -287,6 +287,7 @@ void *ds_read (void *ptr, long start, long bytes) {
 
 	if (fseek (ds_file.fp, sizeof(ds_file.block) + start, SEEK_SET) != 0) {
 		printf ("Error: could not set file pointer during read\n");
+		return NULL;
 	}
 	if (fread (ptr, bytes, 1, ds_file.fp) != 1) {
 		printf ("Error: file could not be read or is empty\n");
