@@ -18,11 +18,18 @@ int main(int argc, char **argv) {
 
 	int value;
 	long index;
-/*
+
 	ds_create ("array.bin", 2048);
-	ds_create_array();*/
+	#ifdef DEBUG
+		printf ("Before ds_create_array\n");
+	#endif
+	ds_create_array();
+	#ifdef DEBUG
+		printf ("Before ds_read_elements\n");
+	#endif
 	ds_init_array();
 
+/*
 	if(argc!=3)
 	{ 
 		fprintf( stderr,"Usage:  %svalue index\n", argv[0] );
@@ -31,9 +38,17 @@ int main(int argc, char **argv) {
 
 	value = atoi( argv[1] );
 	index = atol( argv[2] );
-
+*/
+/*
+	ds_insert (value, index);
 	ds_replace( value, index );
-
+*/
+	#ifdef DEBUG
+		printf ("Before ds_read_elements\n");
+	#endif
+	
+	ds_read_elements ("test.txt");
+	
 	show_array();
 
 	ds_finish_array();
@@ -180,25 +195,21 @@ int ds_read_elements (char *filename) {
 	
 	FILE *fp;
 	int i;
-	long fileEnd;
-	long fileSize;
 	int value;
 	
-	if (fp = fopen (filename, "r+") == NULL) { /*File checker*/
+	i = 0;
+	
+	if ((fp = fopen (filename, "r+")) == NULL) { /*File checker*/
 		printf ("Error: file could not be opened\n");
 		return -1;
 	}
-	fseek (fp, 0, SEEK_END);
-	fileEnd = ftell(fp);
-	fileSize = fileEnd / sizeof(int);
-	for (i = 0; i < fileSize; i++) {
-		fscanf (fp, "%d", value);
-		#ifdef DEBUG
-			printf ("scanned value at %d: %d", i, value);
-		#endif
+	fseek (fp, 0, SEEK_SET);
+	
+	while (fscanf (fp, "%d", &value) > 0) {
 		ds_insert (value, i);
+		i++;
 	}
-	if (fclose (ds_file.fp) == EOF) {
+	if (fclose (fp) == EOF) {
 		printf ("Error: file could not be closed\n");
 		return -1;
 	}
