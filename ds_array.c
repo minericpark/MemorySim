@@ -39,16 +39,16 @@ int main(int argc, char **argv) {
 	value = atoi( argv[1] );
 	index = atol( argv[2] );
 */
-/*
-	ds_insert (value, index);
-	ds_replace( value, index );
-*/
+	ds_read_elements ("test.txt");
+
+	ds_insert (110, 4);
+	ds_replace( 120, 3 );
+
 	#ifdef DEBUG
 		printf ("Before ds_read_elements\n");
 	#endif
-	
-	ds_read_elements ("test.txt");
-	ds_swap (0, 1);
+
+	ds_delete (6);
 	
 	show_array();
 
@@ -76,7 +76,9 @@ int ds_create_array() {
 		#endif
 		return -1;
 	}
-	ds_write (elements_loc, &elements, sizeof(long));
+	if (ds_write (elements_loc, &elements, sizeof(long)) == NULL) { /*Checks if ds_write fails*/
+		return -1;
+	}
 	if (ds_malloc(sizeof(int)*MAX_ELEMENTS) == - 1) {
 		#ifdef DEBUG
 			printf ("Error: ds_malloc for array failed\n");
@@ -128,7 +130,9 @@ int ds_init_array() {
 		#endif
 		return -1;
 	}
-	ds_read (&elements, 0, sizeof(long));
+	if (ds_read (&elements, 0, sizeof(long)) == NULL) { /*Checks if ds_read fails*/
+		return -1;
+	}
 	return 0;
 	
 }
@@ -137,11 +141,17 @@ int ds_replace (int value, long index) {
 	
 	long location;
 	
+	if (index < 0 || index >= elements) { /*Checks if index is negative or greater + equal to current size of array*/
+		return -1;
+	}
+	
 	location = index * sizeof(int) + sizeof(elements);
 	#ifdef DEBUG
 		printf ("value: %d location: %ld\n", value, location);
 	#endif
-	ds_write (location, &value, sizeof(int));
+	if (ds_write (location, &value, sizeof(int)) == NULL) { /*Checks if ds_write fails*/
+		return -1;
+	}
 	
 	return 0;
 }
@@ -157,16 +167,29 @@ int ds_insert (int value, long index) {
 	newValue = value;
 	inserted = 0;
 	
+	if (elements + 1 > MAX_ELEMENTS) { /*Determines if elements has reached maximum capacity*/
+		return -1;
+	}
+	
+	if (index < 0 || index > elements) { /*Determine if index is negative or greater than elements*/
+		return -1;
+	}
+	
+	/*For loop scans entire array from index and calculates location, writes in and temporarily stores first element, then reads and writes appropriately to push array up by one*/
 	for (i = index; i <= elements; i++) {
 		#ifdef DEBUG
 			printf ("Before - New: %ld, old %ld\n", newValue, oldValue);
 		#endif
-		location = i * sizeof(int) + sizeof(elements);
+		location = i * sizeof(int) + sizeof(elements); /*Calculate location of int stored at index num*/
 		#ifdef DEBUG
 			printf ("%d location: %ld\n", i, location);
 		#endif
-		ds_read (&oldValue, location, sizeof(int));
-		ds_write (location, &newValue, sizeof(int));
+		if (ds_read (&oldValue, location, sizeof(int)) == NULL) { /*Checks if ds_read fails*/
+			return -1;
+		}
+		if (ds_write (location, &newValue, sizeof(int)) == NULL) { /*Checks if ds_write fails*/
+			return -1;
+		}
 		
 		newValue = oldValue;
 		#ifdef DEBUG
@@ -193,56 +216,88 @@ int ds_delete (long index) {
 	int removed;
 	int i;
 	
-	if (index < 0 || index > elements - 1) {
+	if (index < 0 || index >= elements) { /*Checks if index is negative or greater/equal to current size of array, and returns -1*/
 		return -1;
 	}
 	
-	for (i = index; i < elements - 1; i++) {
+	/*For loop covers entire array from index to end and records current location, then next location, and reads into the current 
+	value the value at next location, and writes value at next location, into current location. Sets removed bool to true (1)*/
+	for (i = index; i < elements; i++) {
 		curr_loc = i * sizeof(int) + sizeof(elements);
 		next_loc = (i + 1) * sizeof(int) + sizeof(elements);
-		ds_read (&value, next_loc, sizeof(int));
-		ds_write (curr_loc, &value, sizeof(int));
+		if (ds_read (&value, next_loc, sizeof(int)) == NULL) { /*Checks if ds_read fails*/
+			return -1;
+		}
+		if (ds_write (curr_loc, &value, sizeof(int)) == NULL) { /*Checks if ds_write fails*/
+			return -1;
+		}
 		removed = 1;
 	}
+	
+	if (index == elements - 1) { /*Checks if the index requested to be deleted is last element of array, and removes 1 from element, and returns success (0)*/
+		elements--; 
+		return 0;
+	}
 
-	if (removed == 0) {
+	if (removed == 0) { /*Checks if removed bool is false (0). If false, returns -1*/
 		#ifdef DEBUG
 			printf ("Deleted failed\n");
 		#endif
 		return -1;
 	}
-	elements--;
+	elements--; /*Subtract elements by 1*/
 
 	return 0;
 }
 
 int ds_swap (long index1, long index2) {
 	
-	/*Convert 2 indices into addresses, read the 2 values from the addresses into two temp variables, then write them to their opposite addresses*/
 	long loc_1;
 	long loc_2;
 	long val_1;
 	long val_2;
 	
-	if (index1 < 0 || index1 > elements - 1 || index2 < 0 || index2 > elements - 1) {
+	if (index1 < 0 || index1 >= elements || index2 < 0 || index2 >= elements) { /*Checks if either index1 or index2 are either negative or greater than current size of array, and returns -1*/
 		return -1;
 	}
 	
+	/*Finds locations of both index, and reads their appropriate values, then swaps by writing them into the other location*/
 	loc_1 = index1 * sizeof(int) + sizeof(elements);
 	loc_2 = index2 * sizeof(int) + sizeof(elements);
 	
-	ds_read (&val_1, loc_1, sizeof(int));
-	ds_read (&val_2, loc_2, sizeof(int));
+	if (ds_read (&val_1, loc_1, sizeof(int)) == NULL) { /*Checks if ds_read fails*/
+		return -1;
+	}
+	if (ds_read (&val_2, loc_2, sizeof(int)) == NULL) { /*Checks if ds_read fails*/
+		return -1;
+	}
 	
-	ds_write (loc_1, &val_2, sizeof(int));
-	ds_write (loc_2, &val_1, sizeof(int));
-	
+	if (ds_write (loc_1, &val_2, sizeof(int)) == NULL) { /*Checks if ds_write fails*/
+		return -1;
+	}
+	if (ds_write (loc_2, &val_1, sizeof(int)) == NULL) { /*Checks if ds_write fails*/
+		return -1;
+	}
 	return 0;
 }
 
 long ds_find (int target) {
 	
-	return 0;
+	int i;
+	long index_loc;
+	int curr;
+	
+	/*For loop scans entire array (using read) to discover a match with target, then returns that index number*/
+	for (i = 0; i < elements; i++) {
+		index_loc = i * sizeof(int) + sizeof(elements);
+		if (ds_read (&curr, index_loc, sizeof(int)) == NULL) { /*Checks if ds_read fails*/
+			return -1;
+		}
+		if (curr == target) {
+			return i;
+		}
+	}
+	return -1;
 }
 
 int ds_read_elements (char *filename) {
@@ -253,19 +308,21 @@ int ds_read_elements (char *filename) {
 	
 	i = 0;
 	
-	if ((fp = fopen (filename, "r+")) == NULL) { /*File checker*/
+	if ((fp = fopen (filename, "r+")) == NULL) { /*File open checker*/
 		#ifdef DEBUG
 			printf ("Error: file could not be opened\n");
 		#endif
 		return -1;
 	}
-	fseek (fp, 0, SEEK_SET);
+	fseek (fp, 0, SEEK_SET); /*Set file pointer at beginning*/
 	
-	while (fscanf (fp, "%d", &value) > 0) {
-		ds_insert (value, i);
+	while (fscanf (fp, "%d", &value) > 0) { /*While loop continues to scan while pointer has not reached end of file, inserts every value compatible and increments i counter by 1*/
+		if (ds_insert (value, i) != 0) { /*ds_insert error checker*/
+			return -1;
+		}
 		i++;
 	}
-	if (fclose (fp) == EOF) {
+	if (fclose (fp) == EOF) { /*File close checker*/
 		#ifdef DEBUG
 			printf ("Error: file could not be closed\n");
 		#endif
@@ -276,8 +333,10 @@ int ds_read_elements (char *filename) {
 
 int ds_finish_array() {
 	
-	ds_write (0, &elements, sizeof(long)); 
-	if (ds_finish() == 0) {
+	if (ds_write (0, &elements, sizeof(long)) == NULL) { /*Checks if ds_write fails*/
+		return -1;
+	} 
+	if (ds_finish() == 0) { /*Checks if ds_finish fails*/
 		#ifdef DEBUG
 			printf ("ds_finish failed\n");
 		#endif
