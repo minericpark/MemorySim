@@ -161,7 +161,7 @@ void ds_test_init() {
 	int i;
 	
 	printf ("Block Num	Start	Length	Alloced\n");
-	for (i = 0; i < MAX_BLOCKS; i++) {
+	for (i = 0; i < MAX_BLOCKS; i++) { 
 		printf ("%d		%ld	%ld 	%d\n", i, ds_file.block[i].start, ds_file.block[i].length, ds_file.block[i].alloced);
 	}
 
@@ -177,33 +177,43 @@ int ds_create (char *filename, long size) {
 	char *zero = 0;
 	
 	if ((ds_file.fp = fopen (filename, "wb+")) == NULL) { /*File checker*/
-		printf ("Error: file could not be opened\n");
+		#ifdef DEBUG
+			printf ("Error: file could not be opened\n");
+		#endif
 		return -1;
 	}	
 	
-	if (fseek (ds_file.fp, 0, SEEK_SET) != 0) {
-		printf ("Error: file pointer was not reset\n");
+	if (fseek (ds_file.fp, 0, SEEK_SET) != 0) { /*Sets file pointer*/
+		#ifdef DEBUG
+			printf ("Error: file pointer was not reset\n");
+		#endif
 		return -1;
 	}
 
-	for (i = 0; i < MAX_BLOCKS; i++) {
+	for (i = 0; i < MAX_BLOCKS; i++) { /*For loop creates all structs up to MAX_BLOCKS*/
 		ds_file.block[i].start = 0;
 		ds_file.block[i].length = 0;
 		ds_file.block[i].alloced = 0;
 	}
-	ds_file.block[0].length = size;
-	for (i = 0; i < MAX_BLOCKS; i++) {
+	ds_file.block[0].length = size; /*Sets block 0's length to size of created file*/
+	for (i = 0; i < MAX_BLOCKS; i++) { /*For loop writes into file all structs*/
 		if (fwrite (&ds_file.block[i], sizeof (struct ds_blocks_struct), 1, ds_file.fp) != 1) {
-			printf ("Error: file could not be written into or nothing to write!\n");
+			#ifdef DEBUG
+				printf ("Error: file could not be written into or nothing to write!\n");
+			#endif
 			return -1;
 		}
 	}
-	if (fwrite (&zero, sizeof (char) * size, 1, ds_file.fp) != 1) {
-		printf ("Error: file could not be written into or nothing to write!\n");
+	if (fwrite (&zero, sizeof (char) * size, 1, ds_file.fp) != 1) { /*fwrites 0 into file*/
+		#ifdef DEBUG
+			printf ("Error: file could not be written into or nothing to write!\n");
+		#endif
 		return -1;
 	}
-	if (fclose (ds_file.fp) == EOF) {
-		printf ("Error: file could not be closed\n");
+	if (fclose (ds_file.fp) == EOF) { /*Checks if file closes appropriately*/
+		#ifdef DEBUG
+			printf ("Error: file could not be closed\n");
+		#endif
 		return -1;
 	}
 	
@@ -213,14 +223,19 @@ int ds_create (char *filename, long size) {
 
 int ds_init (char *filename) {
 	
-	if ((ds_file.fp = fopen (filename, "rb+")) == NULL) {
-		printf ("Error: file could not be opened\n");
+	if ((ds_file.fp = fopen (filename, "rb+")) == NULL) { /*File checker*/
+		#ifdef DEBUG
+			printf ("Error: file could not be opened\n");
+		#endif
 		return -1;
 	}
-	if (fread (&ds_file.block, sizeof(ds_file.block), 1, ds_file.fp) != 1) {
-		printf ("Error: file could not be read or is empty\n");
+	if (fread (&ds_file.block, sizeof(ds_file.block), 1, ds_file.fp) != 1) { /*Freads entire file of size ds_file.block into ds_file.block struct*/
+		#ifdef DEBUG
+			printf ("Error: file could not be read or is empty\n");
+		#endif
 		return -1;
 	}
+	/*Sets ds_count reads and writes both to 0 (resets)*/
 	ds_counts.reads = 0;
 	ds_counts.writes = 0;
 	return (0);
@@ -234,23 +249,20 @@ long ds_malloc (long amount) {
 	long tempLength;
 	int secondBlockFound = 0;
 	
-	for (i = 0; i < MAX_BLOCKS; i++) {
+	for (i = 0; i < MAX_BLOCKS; i++) { /*For loop covers all blocks and seeks first memory size (length) big enough for allocation, along with a block that is not allocated*/
 		if (ds_file.block[i].length >= amount && ds_file.block[i].alloced == 0) {
 			#ifdef DEBUG
-			
 				printf ("Discovered block %d, allocating...\n", i);
-			
 			#endif
+			/*Temporarily hold previous values of unallocated block, then set block with new values*/
 			tempStart = ds_file.block[i].start;
 			tempLength = ds_file.block[i].length;
 			ds_file.block[i].length = amount;
 			ds_file.block[i].alloced = 1;
-			for (i = 0; i < MAX_BLOCKS; i++) {
+			for (i = 0; i < MAX_BLOCKS; i++) { /*For loop seeks 2nd block and writes structure information into it*/
 				if (ds_file.block[i].length == 0 && secondBlockFound == 0) {
 					#ifdef DEBUG
-					
 						printf ("Second block found at %d, adjusting...\n", i);
-					
 					#endif
 					secondBlockFound = 1;
 					ds_file.block[i].start = tempStart + amount;
@@ -258,7 +270,7 @@ long ds_malloc (long amount) {
 					ds_file.block[i].alloced = 0;
 				}
 			}
-			return tempStart;
+			return tempStart; /*Return address of allocated block*/
 		}			
 	}	
 	return (-1);
@@ -270,12 +282,10 @@ void ds_free (long start) {
 	int i;
 	int blockFreed = 0;
 	
-	for (i = 0; i < MAX_BLOCKS; i++) {
+	for (i = 0; i < MAX_BLOCKS; i++) { /*For loop checks entire block and seeks the address given, then unallocates it if memory is not already unallocated*/
 		if (ds_file.block[i].start == start && blockFreed == 0) {
 			#ifdef DEBUG
-			
 				printf ("Discovered block %d allocated, freeing...\n", i);
-			
 			#endif
 			ds_file.block[i].alloced = 0;
 			blockFreed = 1;
@@ -285,28 +295,36 @@ void ds_free (long start) {
 
 void *ds_read (void *ptr, long start, long bytes) {
 
-	if (fseek (ds_file.fp, sizeof(ds_file.block) + start, SEEK_SET) != 0) {
-		printf ("Error: could not set file pointer during read\n");
+	if (fseek (ds_file.fp, sizeof(ds_file.block) + start, SEEK_SET) != 0) { /*File pointer checker*/
+		#ifdef DEBUG
+			printf ("Error: could not set file pointer during read\n");
+		#endif
 		return NULL;
 	}
-	if (fread (ptr, bytes, 1, ds_file.fp) != 1) {
-		printf ("Error: file could not be read or is empty\n");
+	if (fread (ptr, bytes, 1, ds_file.fp) != 1) { /*File read checker */
+		#ifdef DEBUG
+			printf ("Error: file could not be read or is empty\n");
+		#endif
 		return NULL;
 	}
-	ds_counts.reads++;
+	ds_counts.reads++; /*Increments read by one*/
 	return ptr;
 
 }
 
 long ds_write (long start, void *ptr, long bytes) {
 	
-	if (fseek (ds_file.fp, sizeof(ds_file.block) + start, SEEK_SET) != 0) {
-		printf ("Error: could not set file pointer during write\n");
+	if (fseek (ds_file.fp, sizeof(ds_file.block) + start, SEEK_SET) != 0) { /*File pointer checker*/
+		#ifdef DEBUG
+			printf ("Error: could not set file pointer during write\n");
+		#endif
 		return -1;
 	}
 	
-	if (fwrite (ptr, bytes, 1, ds_file.fp) != 1) {
-		printf ("Error: file could not be written into or nothing to write!\n");
+	if (fwrite (ptr, bytes, 1, ds_file.fp) != 1) { /*File writer checker*/
+		#ifdef DEBUG
+			printf ("Error: file could not be written into or nothing to write!\n");
+		#endif
 		return -1;
 	}		
 	ds_counts.writes++;
@@ -318,21 +336,25 @@ int ds_finish () {
 	
 	int i;
 
-	if (fseek (ds_file.fp, 0, SEEK_SET) != 0) {
-		printf ("Error: could not set file pointer during finish\n");
+	if (fseek (ds_file.fp, 0, SEEK_SET) != 0) { /*File pointer checker*/
+		#ifdef DEBUG
+			printf ("Error: could not set file pointer during finish\n");
+		#endif
 		return 0;
 	}
-	/*Error check when file reads in*/
-	/*fwrite (&ds_file, sizeof(ds_file), 0, ds_file.fp);*/
-	for (i = 0; i < MAX_BLOCKS; i++) {
+	for (i = 0; i < MAX_BLOCKS; i++) { /*Checks entire structure and writes it all into file*/
 		if (fwrite (&ds_file.block[i], sizeof (struct ds_blocks_struct), 1, ds_file.fp) != 1) {
-			printf ("Error: file could not be written into or nothing to write!\n");
+			#ifdef DEBUG
+				printf ("Error: file could not be written into or nothing to write!\n");
+			#endif
 			return 0;
 		}
 	}
 	printf ("reads: %d\n", ds_counts.reads);
 	printf ("writes: %d\n", ds_counts.writes);
-	fclose (ds_file.fp);
+	if (fclose (ds_file.fp) == EOF) {
+		return 0;
+	}
 	return (1);
 	
 }

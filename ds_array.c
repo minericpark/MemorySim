@@ -3,7 +3,7 @@
 #include <math.h>
 #include "ds_array.h"
 #include "ds_memory.h"
-#define DEBUG
+/*#define DEBUG*/
 /*#define TEST*/
 
 long elements;
@@ -314,7 +314,9 @@ int ds_read_elements (char *filename) {
 		#endif
 		return -1;
 	}
-	fseek (fp, 0, SEEK_SET); /*Set file pointer at beginning*/
+	if (fseek (fp, 0, SEEK_SET) != 0) { /*Set file pointer at beginning*/
+		return -1;
+	}
 	
 	while (fscanf (fp, "%d", &value) > 0) { /*While loop continues to scan while pointer has not reached end of file, inserts every value compatible and increments i counter by 1*/
 		if (ds_insert (value, i) != 0) { /*ds_insert error checker*/
