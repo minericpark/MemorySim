@@ -48,6 +48,7 @@ int main(int argc, char **argv) {
 	#endif
 	
 	ds_read_elements ("test.txt");
+	ds_swap (0, 1);
 	
 	show_array();
 
@@ -63,17 +64,23 @@ int ds_create_array() {
 	long elements_loc;
 	
 	if (ds_init("array.bin") == -1) {
-		printf ("Error: ds_init failed\n");
+		#ifdef DEBUG
+			printf ("Error: ds_init failed\n");
+		#endif
 		return -1;
 	}
 	elements_loc = ds_malloc (sizeof(elements));
 	if (elements_loc == -1) {
-		printf ("Error: initial ds_malloc failed\n");
+		#ifdef DEBUG
+			printf ("Error: initial ds_malloc failed\n");
+		#endif
 		return -1;
 	}
 	ds_write (elements_loc, &elements, sizeof(long));
 	if (ds_malloc(sizeof(int)*MAX_ELEMENTS) == - 1) {
-		printf ("Error: ds_malloc for array failed\n");
+		#ifdef DEBUG
+			printf ("Error: ds_malloc for array failed\n");
+		#endif
 		return -1;
 	}
 	if (ds_finish() != 1) {
@@ -116,7 +123,9 @@ void show_array() {
 int ds_init_array() {
 	
 	if (ds_init ("array.bin") != 0) {
-		printf ("ds_init failed\n");
+		#ifdef DEBUG
+			printf ("ds_init failed\n");
+		#endif
 		return -1;
 	}
 	ds_read (&elements, 0, sizeof(long));
@@ -178,10 +187,55 @@ int ds_insert (int value, long index) {
 
 int ds_delete (long index) {
 	
+	long curr_loc;
+	long next_loc;
+	long value;
+	int removed;
+	int i;
+	
+	if (index < 0 || index > elements - 1) {
+		return -1;
+	}
+	
+	for (i = index; i < elements - 1; i++) {
+		curr_loc = i * sizeof(int) + sizeof(elements);
+		next_loc = (i + 1) * sizeof(int) + sizeof(elements);
+		ds_read (&value, next_loc, sizeof(int));
+		ds_write (curr_loc, &value, sizeof(int));
+		removed = 1;
+	}
+
+	if (removed == 0) {
+		#ifdef DEBUG
+			printf ("Deleted failed\n");
+		#endif
+		return -1;
+	}
+	elements--;
+
 	return 0;
 }
 
 int ds_swap (long index1, long index2) {
+	
+	/*Convert 2 indices into addresses, read the 2 values from the addresses into two temp variables, then write them to their opposite addresses*/
+	long loc_1;
+	long loc_2;
+	long val_1;
+	long val_2;
+	
+	if (index1 < 0 || index1 > elements - 1 || index2 < 0 || index2 > elements - 1) {
+		return -1;
+	}
+	
+	loc_1 = index1 * sizeof(int) + sizeof(elements);
+	loc_2 = index2 * sizeof(int) + sizeof(elements);
+	
+	ds_read (&val_1, loc_1, sizeof(int));
+	ds_read (&val_2, loc_2, sizeof(int));
+	
+	ds_write (loc_1, &val_2, sizeof(int));
+	ds_write (loc_2, &val_1, sizeof(int));
 	
 	return 0;
 }
@@ -200,7 +254,9 @@ int ds_read_elements (char *filename) {
 	i = 0;
 	
 	if ((fp = fopen (filename, "r+")) == NULL) { /*File checker*/
-		printf ("Error: file could not be opened\n");
+		#ifdef DEBUG
+			printf ("Error: file could not be opened\n");
+		#endif
 		return -1;
 	}
 	fseek (fp, 0, SEEK_SET);
@@ -210,7 +266,9 @@ int ds_read_elements (char *filename) {
 		i++;
 	}
 	if (fclose (fp) == EOF) {
-		printf ("Error: file could not be closed\n");
+		#ifdef DEBUG
+			printf ("Error: file could not be closed\n");
+		#endif
 		return -1;
 	}
 	return 0;
@@ -220,7 +278,9 @@ int ds_finish_array() {
 	
 	ds_write (0, &elements, sizeof(long)); 
 	if (ds_finish() == 0) {
-		printf ("ds_finish failed\n");
+		#ifdef DEBUG
+			printf ("ds_finish failed\n");
+		#endif
 		return -1;
 	}
 	return 0;
