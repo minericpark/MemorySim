@@ -18,8 +18,10 @@ int main(int argc, char **argv) {
 
 	int value;
 	long index;
-
-	ds_create_array();
+/*
+	ds_create ("array.bin", 2048);
+	ds_create_array();*/
+	ds_init_array();
 
 	if(argc!=3)
 	{ 
@@ -30,13 +32,11 @@ int main(int argc, char **argv) {
 	value = atoi( argv[1] );
 	index = atol( argv[2] );
 
-	ds_init_array();
+	ds_replace( value, index );
 
-	ds_insert( value, index );
-
-	ds_finish_array();
 	show_array();
 
+	ds_finish_array();
 
 	return 0;
 	
@@ -44,16 +44,19 @@ int main(int argc, char **argv) {
 
 int ds_create_array() {
 	
-	long initialValue = 0;
+	elements = 0;
+	long elements_loc;
 	
 	if (ds_init("array.bin") == -1) {
 		printf ("Error: ds_init failed\n");
 		return -1;
 	}
-	if (ds_malloc(sizeof(initialValue)) == -1) {
+	elements_loc = ds_malloc (sizeof(elements));
+	if (elements_loc == -1) {
 		printf ("Error: initial ds_malloc failed\n");
 		return -1;
 	}
+	ds_write (elements_loc, &elements, sizeof(long));
 	if (ds_malloc(sizeof(int)*MAX_ELEMENTS) == - 1) {
 		printf ("Error: ds_malloc for array failed\n");
 		return -1;
@@ -84,11 +87,13 @@ void show_array() {
 	int value;
 	long location;
 	
+	printf ("elements = %ld\n", elements);
 	printf ("Showing array\n");
 	for (i = 0; i < elements; i++) {
 		location = i * sizeof(int) + sizeof(elements);
-		ds_read (&value, location, sizeof(int));
-		printf ("%d %d\n", i, value);
+		printf ("location: %ld\n", location);
+		ds_read (&value, location, sizeof(int));	
+		printf ("%d %d\n", i, value); 
 	}
 	
 }
@@ -106,64 +111,45 @@ int ds_init_array() {
 
 int ds_replace (int value, long index) {
 	
+	long location;
+	
+	location = index * sizeof(int) + sizeof(elements);
+	#ifdef DEBUG
+		printf ("value: %d location: %ld\n", value, location);
+	#endif
+	ds_write (location, &value, sizeof(int));
+	
 	return 0;
 }
 
 int ds_insert (int value, long index) {
 	
-	int oldValue;
-	int newValue;
+	long oldValue;
+	long newValue;
 	long location;
 	int inserted;
 	int i;
 	
 	newValue = value;
-	i = index;
 	inserted = 0;
-	/*
-	for (i = index; i < index + elements; i++) {
-		printf ("index: %d", i);
-		if (index == location && inserted == 0) {
-			ds_read (&oldValue, index, sizeof(int));
-			ds_write (index, &newValue, sizeof(int)); 
-			inserted = 1;
-			#ifdef DEBUG
-				printf ("New: %d, old: %d\n", oldValue, newValue);
-			#endif
-		}
-		else if (inserted == 1) {
-			newValue = oldValue;
-			ds_read (&oldValue, index, sizeof(int));
-			ds_write (index, &newValue, sizeof(int));
-			#ifdef DEBUG
-				printf ("2. New: %d, old: %d\n", oldValue, newValue);
-			#endif
-		}
-	}
-	*/
 	
-	do {
+	for (i = index; i <= elements; i++) {
+		#ifdef DEBUG
+			printf ("Before - New: %ld, old %ld\n", newValue, oldValue);
+		#endif
 		location = i * sizeof(int) + sizeof(elements);
-		printf ("location: %ld\n", location);
-		printf ("index: %d\n", i);
-		if (inserted == 0) {
-			ds_read (&oldValue, location, sizeof(int));
-			ds_write (location, &newValue, sizeof(int)); 
-			inserted = 1;
-			#ifdef DEBUG
-				printf ("New: %d, old: %d\n", newValue, oldValue);
-			#endif
-		}
-		else {
-			newValue = oldValue;
-			ds_read (&oldValue, i, sizeof(int));
-			ds_write (i, &newValue, sizeof(int));
-			#ifdef DEBUG
-				printf ("2. New: %d, old: %d\n", oldValue, newValue);
-			#endif
-		}
-		i++;
-	} while (i < elements);
+		#ifdef DEBUG
+			printf ("%d location: %ld\n", i, location);
+		#endif
+		ds_read (&oldValue, location, sizeof(int));
+		ds_write (location, &newValue, sizeof(int));
+		
+		newValue = oldValue;
+		#ifdef DEBUG
+			printf ("After - New: %ld, old %ld\n", newValue, oldValue);
+		#endif
+		inserted = 1;
+	}
 	
 	if (inserted == 0) {
 		#ifdef DEBUG
@@ -192,6 +178,30 @@ long ds_find (int target) {
 
 int ds_read_elements (char *filename) {
 	
+	FILE *fp;
+	int i;
+	long fileEnd;
+	long fileSize;
+	int value;
+	
+	if (fp = fopen (filename, "r+") == NULL) { /*File checker*/
+		printf ("Error: file could not be opened\n");
+		return -1;
+	}
+	fseek (fp, 0, SEEK_END);
+	fileEnd = ftell(fp);
+	fileSize = fileEnd / sizeof(int);
+	for (i = 0; i < fileSize; i++) {
+		fscanf (fp, "%d", value);
+		#ifdef DEBUG
+			printf ("scanned value at %d: %d", i, value);
+		#endif
+		ds_insert (value, i);
+	}
+	if (fclose (ds_file.fp) == EOF) {
+		printf ("Error: file could not be closed\n");
+		return -1;
+	}
 	return 0;
 }
 
