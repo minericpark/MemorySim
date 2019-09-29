@@ -74,22 +74,21 @@ int ds_create_list() {
 void show_list() {
 	
 	long loc;
-	long loc_check;
 	struct ds_list_item_struct li;
 	int item_num = 0;
+	int i;
+	int size = 6;
 	
 	li.item = 0;
 	
 	printf ("Showing list\n");
 	ds_read (&loc, 0, sizeof(long));
 	
-	do {
+	for (i = 0; i < size; i++) {
 		ds_read (&li, loc, sizeof(struct ds_list_item_struct));
-		ds_read (&loc_check, loc, sizeof(long));
+		printf ("address: %ld, value: %d, next: %ld\n", loc, li.item, loc);
 		loc = li.next;
-		printf ("index: %d, value: %d, next: %ld\n", item_num, li.item, li.next);
-		item_num++;
-	} while (loc_check != -1);
+	}
 	
 }
 
@@ -106,105 +105,130 @@ int ds_init_list() {
 
 int ds_replace (int value, long index) {
 	
-	struct ds_list_item_struct previous_item;
-	long previous_loc = 0;
+	struct ds_list_item_struct temp_struct;
 	int i;
-	long location;
-	location = 1 * sizeof(long);
+	long header = 0;
+	long temp_loc;
 	
-	if (ds_read (&previous_item.next, location, sizeof (long)) == 0) {
+	if (ds_read (&temp_loc, 0, sizeof(long)) == 0) { /*Read address of first item in linkedlist*/
 		#ifdef DEBUG
-			printf ("Error: file could not be read or is empty\n");
+			printf ("ds_read failed\n");
 		#endif
 		return -1;
 	}
-	for (i = index; i >= 0; i--) {
-		if (previous_item.next == -1) {
+	
+	for (i = index; i >= 0; i--) { /*Scan through list starting at index to seek value previous to it and set temp_loc*/
+		header = temp_loc;
+		if (ds_read (&temp_struct, header, sizeof(struct ds_list_item_struct)) == 0) {
 			#ifdef DEBUG
-				printf ("Error: end of list reached prior to hitting index 0\n");
+				printf ("ds_read failed\n");
 			#endif
 			return -1;
 		}
-		previous_loc = previous_item.next; 	
-		/*Use address received by previous_item.next to read*/
-		if (ds_read (&previous_item.item, previous_loc, sizeof(int)) == 0) {
-			#ifdef DEBUG
-				printf ("Error: ds_read failed\n");
-			#endif
-			return -1;
-		}
+		temp_loc = temp_struct.next;
 	}
-	if (previous_loc != 0) {
-		if (ds_write (previous_loc, &value, sizeof(int)) == -1) {
+	
+	if ((temp_struct.next = ds_malloc (sizeof(temp_struct))) == -1) { /*Malloc appropriate size to struct*/
+		#ifdef DEBUG
+			printf ("ds_malloc failed\n");
+		#endif
+		return -1;
+	}
+	
+	if (header == 0) { /*If header is still 0, write only long*/
+		if (ds_write (header, &temp_struct.next, sizeof(long)) == -1) {
 			#ifdef DEBUG
-				printf ("Error: conditional ds_write failed\n");
+				printf ("ds_Write failed\n");
+			#endif
+			return -1;
+		}			
+	}
+	else { /*Else write only struct*/
+		if (ds_write (header, &temp_struct, sizeof(struct ds_list_item_struct)) == -1) {
+			#ifdef DEBUG
+				printf ("ds_write failed\n");
 			#endif
 			return -1;
 		}
 	}
 	
+	/*Set values of new_item object and malloc*/
+	header = temp_struct.next;
+	temp_struct.next = temp_loc;
+	temp_struct.item = value;
+	
+	/*Write appropriate node into file*/
+	if (ds_write (header, &temp_struct, sizeof(struct ds_list_item_struct)) == -1) {
+		#ifdef DEBUG
+			printf ("ds_write failed\n");
+		#endif
+		return -1;
+	}
+	
 	return 0;
+	
 }
 
 int ds_insert (int value, long index) {
 	
-	struct ds_list_item_struct previous_item;
-	struct ds_list_item_struct new_item;
-	long previous_loc = 0 * sizeof(struct ds_list_item_struct) + sizeof(long);
-	long valid = 0;
+	struct ds_list_item_struct temp_struct;
 	int i;
+	long header = 0;
+	long temp_loc;
 	
-	if (ds_read (&previous_item.next, 0, sizeof (long)) == 0) {
+	if (ds_read (&temp_loc, 0, sizeof(long)) == 0) { /*Read address of first item in linkedlist*/
 		#ifdef DEBUG
-			printf ("Error: file could not be read or is empty\n");
+			printf ("ds_read failed\n");
 		#endif
 		return -1;
-	} 
+	}
 	
-	for (i = index; i >= 0; i--) {
-		if (previous_item.next == -1 && index != 0) {
+	for (i = index; i > 0; i--) { /*Scan through list starting at index to seek value previous to it and set temp_loc*/
+		header = temp_loc;
+		if (ds_read (&temp_struct, header, sizeof(struct ds_list_item_struct)) == 0) {
 			#ifdef DEBUG
-				printf ("Error: end of list reached prior to hitting index 0\n");
+				printf ("ds_read failed\n");
 			#endif
 			return -1;
 		}
-		if (index != 0) {
-			valid = 0;
-			if (ds_write (0, &valid, sizeof(long)) == -1) {
-				return -1;
-			}
-		}
-		else {
-			valid = -1;
-			if (ds_write (0, &valid, sizeof(long)) == -1) {
-				return -1;
-			}
-		}
-		previous_loc = previous_item.next; 	
-		/*Use address received by previous_item.next to read*/
-		if (ds_read (&previous_item, previous_loc, sizeof(struct ds_list_item_struct)) == 0) {
+		temp_loc = temp_struct.next;
+	}
+	
+	if ((temp_struct.next = ds_malloc (sizeof(temp_struct))) == -1) { /*Malloc appropriate size to struct*/
+		#ifdef DEBUG
+			printf ("ds_malloc failed\n");
+		#endif
+		return -1;
+	}
+	
+	if (header == 0) { /*If header is still 0, write only long*/
+		if (ds_write (header, &temp_struct.next, sizeof(long)) == -1) {
 			#ifdef DEBUG
-				printf ("Error: ds_read failed\n");
+				printf ("ds_Write failed\n");
+			#endif
+			return -1;
+		}			
+	}
+	else { /*Else write only struct*/
+		if (ds_write (header, &temp_struct, sizeof(struct ds_list_item_struct)) == -1) {
+			#ifdef DEBUG
+				printf ("ds_write failed\n");
 			#endif
 			return -1;
 		}
 	}
-	new_item.item = value;
-	new_item.next = previous_item.next;
-	previous_item.next = ds_malloc(sizeof(new_item));
-	if (ds_write (previous_item.next, &new_item, sizeof(struct ds_list_item_struct)) == -1) {
+	
+	/*Set values of new_item object and malloc*/
+	header = temp_struct.next;
+	temp_struct.next = temp_loc;
+	temp_struct.item = value;
+	
+	/*Write appropriate node into file*/
+	if (ds_write (header, &temp_struct, sizeof(struct ds_list_item_struct)) == -1) {
 		#ifdef DEBUG
-			printf ("Error: ds_write failed\n");
+			printf ("ds_write failed\n");
 		#endif
 		return -1;
-	}
-	if (previous_loc != 0) {
-		if (ds_write (previous_loc, &previous_item, sizeof(struct ds_list_item_struct)) == -1) {
-			#ifdef DEBUG
-				printf ("Error: conditional ds_write failed\n");
-			#endif
-			return -1;
-		}
 	}
 	
 	return 0;
@@ -212,53 +236,64 @@ int ds_insert (int value, long index) {
 
 int ds_delete (long index) {
 	
-	struct ds_list_item_struct previous_item;
-	struct ds_list_item_struct new_item;
-	long previous_loc = 0;
+	struct ds_list_item_struct temp_struct;
 	int i;
-	long location;
-	long value;
-	location = 1 * sizeof(long);
+	long header = 0;
+	long temp_loc;
 	
-	if (ds_read (&previous_item.next, location, sizeof (long)) == 0) {
+	if (ds_read (&temp_loc, 0, sizeof(long)) == 0) { /*Read address of first item in linkedlist*/
 		#ifdef DEBUG
-			printf ("Error: file could not be read or is empty\n");
+			printf ("ds_read failed\n");
 		#endif
 		return -1;
 	}
-	for (i = index; i >= 0; i--) {
-		if (previous_item.next == -1) {
+	
+	for (i = index; i > 0; i--) { /*Scan through list starting at index to seek value previous to it and set temp_loc*/
+		header = temp_loc;
+		if (ds_read (&temp_struct, header, sizeof(struct ds_list_item_struct)) == 0) {
 			#ifdef DEBUG
-				printf ("Error: end of list reached prior to hitting index 0\n");
+				printf ("ds_read failed\n");
 			#endif
 			return -1;
 		}
-		previous_loc = previous_item.next; 	
-		/*Use address received by previous_item.next to read*/
-		if (ds_read (&previous_item.item, previous_loc, sizeof(int)) == 0) {
+		temp_loc = temp_struct.next;
+	}
+	
+	ds_free (temp_struct.next);
+	
+	if (header == 0) { /*If header is still 0, write only long*/
+		if (ds_write (header, &temp_struct.next, sizeof(long)) == -1) {
 			#ifdef DEBUG
-				printf ("Error: ds_read failed\n");
+				printf ("ds_Write failed\n");
+			#endif
+			return -1;
+		}			
+		
+	}
+	else { /*Else write only struct*/
+	
+		/**/
+		if (ds_write (header, &temp_struct, sizeof(struct ds_list_item_struct)) == -1) {
+			#ifdef DEBUG
+				printf ("ds_write failed\n");
 			#endif
 			return -1;
 		}
 	}
-	new_item.item = value;
-	new_item.next = previous_loc;
-	previous_item.next = ds_malloc(sizeof(new_item));
-	if (ds_write (previous_item.next, &new_item.item, sizeof(int)) == 0) {
+	
+	/*Set values of new_item object and malloc*/
+	header = temp_struct.next;
+	temp_struct.next = temp_loc;
+	temp_struct.value = value;
+	
+	/*Write appropriate node into file*/
+	if (ds_write (header, &temp_struct, sizeof(struct ds_list_item_struct)) == -1) {
 		#ifdef DEBUG
-			printf ("Error: ds_write failed\n");
+			printf ("ds_write failed\n");
 		#endif
 		return -1;
 	}
-	if (previous_loc != 0) {
-		if (ds_write (previous_loc, &previous_item.item, sizeof(int)) == 0) {
-			#ifdef DEBUG
-				printf ("Error: conditional ds_write failed\n");
-			#endif
-			return -1;
-		}
-	}
+	
 	return 0;
 	
 }
@@ -276,6 +311,8 @@ long ds_find (int target) {
 }
 
 int ds_read_elements (char *filename) {
+	
+	/**/
 	
 	FILE *fp;
 	int i;
