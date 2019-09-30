@@ -1,23 +1,6 @@
-/**********************************main.c**************************************************
-Student Name: Eric Minseo Park                                           Email ID: epark03
-Date: September 29, 2019                                                 Course Name: CIS 2520
-
-I asset that this work my own. I have appropriately acknowledged any and all material
-(data, images, ideas or words) that I have used, whether directly quoted or paraphrased.
-Furthermore, I certify that this assignment was prepared by me specifically for this
-course.
-******************************************************************************************/
-
-/*****************************************************************************************
-     Compiling the program
-******************************************************************************************
-The program should be compiled by running the make file:
-compile: make ds_memory
-******************************************************************************************
-     Running the program
-******************************************************************************************
-running: ./ds_memory
-*****************************************************************************************/
+/*  Eric Minseo Park 
+    1001018
+    epark03@uoguelph.ca   */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -242,6 +225,11 @@ int ds_create (char *filename, long size) {
 	
 }
 
+/*
+* int ds_init opens and reads block from filename
+* and resets counts for both reads and writes to 0. 
+* Returns 0 when complete, or -1 when failed
+*/
 int ds_init (char *filename) {
 	
 	if ((ds_file.fp = fopen (filename, "rb+")) == NULL) { /*File checker*/
@@ -263,6 +251,10 @@ int ds_init (char *filename) {
 	
 }
 
+/*
+* long ds_malloc takes in long amount and finds the first block with size greater or equal to amount,
+* to allocate and returns the address of the allocated block
+*/
 long ds_malloc (long amount) {
 	
 	int i;
@@ -298,6 +290,10 @@ long ds_malloc (long amount) {
 	
 }
 
+/*
+* void ds_free takes in long start and finds specified block
+* then sets allocate to 0
+*/
 void ds_free (long start) {
 	
 	int i;
@@ -314,6 +310,11 @@ void ds_free (long start) {
 	}
 }
 
+/*
+* void ds_read takes in void ptr, long start and long bytes
+* to find location in file through start, read in the ptr of size bytes and increments ds_counts.reads up once.
+* returns pointer read, or null if failed.
+*/
 void *ds_read (void *ptr, long start, long bytes) {
 
 	if (fseek (ds_file.fp, sizeof(ds_file.block) + start, SEEK_SET) != 0) { /*File pointer checker*/
@@ -333,6 +334,11 @@ void *ds_read (void *ptr, long start, long bytes) {
 
 }
 
+/*
+* int ds_write takes in long start, void ptr, long bytes
+* to find location in file through start and write in the ptr of size bytes and increments ds_counts.writes up once. 
+* Returns location of write if success, and -1 if failed.
+*/
 long ds_write (long start, void *ptr, long bytes) {
 	
 	if (fseek (ds_file.fp, sizeof(ds_file.block) + start, SEEK_SET) != 0) { /*File pointer checker*/
@@ -353,6 +359,10 @@ long ds_write (long start, void *ptr, long bytes) {
 	
 }
 
+/*
+* int ds_finish resets file pointer, and writes in all blocks into file
+* then closes file. Returns 1 if success or 0 if failed.
+*/
 int ds_finish () {
 	
 	int i;

@@ -1,23 +1,6 @@
-/**********************************main.c**************************************************
-Student Name: Eric Minseo Park                                           Email ID: epark03
-Date: September 29, 2019                                                 Course Name: CIS 2520
-
-I asset that this work my own. I have appropriately acknowledged any and all material
-(data, images, ideas or words) that I have used, whether directly quoted or paraphrased.
-Furthermore, I certify that this assignment was prepared by me specifically for this
-course.
-******************************************************************************************/
-
-/*****************************************************************************************
-     Compiling the program
-******************************************************************************************
-The program should be compiled by running the make file:
-compile: make ds_list
-******************************************************************************************
-     Running the program
-******************************************************************************************
-running: ./ds_list
-*****************************************************************************************/
+/*  Eric Minseo Park 
+    1001018
+    epark03@uoguelph.ca   */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -27,7 +10,7 @@ running: ./ds_list
 /*#define DEBUG*/
 /*#define TEST*/
 
-
+/*
 int main() {
 	
 	ds_create ("list.bin", 2048);
@@ -54,7 +37,14 @@ int main() {
 	return 0;
 	
 }
+*/
 
+/*
+* int ds_create_list initializes list.bin,
+* mallocs size of initial value (long)
+* and writes the initial value into file. Ends with finish. 
+* Returns 0 when success, and -1 when failed.
+*/
 int ds_create_list() {
 	
 	long initial_value;
@@ -92,27 +82,10 @@ int ds_create_list() {
 	
 }
 
-void show_list() {
-	
-	long loc;
-	struct ds_list_item_struct li;
-	int item_num = 0;
-	int i;
-	int size = 6;
-	
-	li.item = 0;
-	
-	printf ("Showing list\n");
-	ds_read (&loc, 0, sizeof(long));
-	
-	for (i = 0; i < size; i++) {
-		ds_read (&li, loc, sizeof(struct ds_list_item_struct));
-		printf ("address: %ld, value: %d, next: %ld\n", loc, li.item, li.next);
-		loc = li.next;
-	}
-	
-}
-
+/*
+* int ds_init_list ds_inits list.bin,
+* returns 0 when success and -1 when fail.
+*/
 int ds_init_list() {
 	
 	if (ds_init ("list.bin") != 0) {
@@ -124,6 +97,11 @@ int ds_init_list() {
 	return 0;
 }
 
+/*
+* int ds_replace takes in int value and long index, finds location with index provided,
+* reads in appropriate struct after scanning through list, then changes value of struct @ index's value
+* to given value, and writes it back into file. Returns 0 when success, -1 when fail.
+*/
 int ds_replace (int value, long index) {
 	
 	struct ds_list_item_struct temp_struct;
@@ -169,6 +147,11 @@ int ds_replace (int value, long index) {
 	
 }
 
+/*
+* int ds_insert takes in int value and long index, and finds location (with use of index), passes through entire list
+* with loop, mallocs size, updates the header appropriately (-1 or address), and sets temp_struct.
+* Writes temp_struct into file and returns 0 when success, and -1 when fail.
+*/
 int ds_insert (int value, long index) {
 	
 	struct ds_list_item_struct temp_struct;
@@ -234,6 +217,12 @@ int ds_insert (int value, long index) {
 	return 0;
 }
 
+/*
+* int ds_delete takes in long index, and finds location (with use of index), passes
+* through entire list, frees the memory of the address found, and rearranges the address
+* of the previous element (before index) to point index.next's address. Returns
+* 0 when success, and -1 when fail.
+*/
 int ds_delete (long index) {
 	
 	struct ds_list_item_struct temp_struct;
@@ -306,12 +295,19 @@ int ds_delete (long index) {
 	
 }
 
+/*
+* int ds_swap takes in long index1 and long index2 to (INCOMPLETE)
+*/
 int ds_swap (long index1, long index2) {
 	
 	return 0;
 	
 }
 
+/*
+* long ds_find takes in int target to scan through list
+* to find item target, and returns index when successful. Otherwise, 0 when fails.
+*/
 long ds_find (int target) {
 	
 	struct ds_list_item_struct temp_struct;
@@ -344,6 +340,10 @@ long ds_find (int target) {
 	
 }
 
+/*
+* int ds_read_elements takes in char filename and scans entire file, and inserts every element
+* into linked list. Returns 0 when success and -1 when fail.
+*/
 int ds_read_elements (char *filename) {
 	
 	/**/
@@ -365,7 +365,7 @@ int ds_read_elements (char *filename) {
 	}
 	
 	while (fscanf (fp, "%d", &value) > 0) { /*While loop continues to scan while pointer has not reached end of file, inserts every value compatible and increments i counter by 1*/
-		if (ds_insert	 (value, i) != 0) { /*ds_insert error checker*/
+		if (ds_insert (value, i) != 0) { /*ds_insert error checker*/
 			return -1;
 		}
 		i++;
@@ -380,6 +380,10 @@ int ds_read_elements (char *filename) {
 	
 }
 
+/*
+* int ds_finish_list calls ds_finish to save file. 
+* Returns 0 when success and -1 when fail.
+*/
 int ds_finish_list() {
 	
 	if (ds_finish() == 0) {

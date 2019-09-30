@@ -1,23 +1,6 @@
-/**********************************main.c**************************************************
-Student Name: Eric Minseo Park                                           Email ID: epark03
-Date: September 29, 2019                                                 Course Name: CIS 2520
-
-I asset that this work my own. I have appropriately acknowledged any and all material
-(data, images, ideas or words) that I have used, whether directly quoted or paraphrased.
-Furthermore, I certify that this assignment was prepared by me specifically for this
-course.
-******************************************************************************************/
-
-/*****************************************************************************************
-     Compiling the program
-******************************************************************************************
-The program should be compiled by running the make file:
-compile: make ds_array
-******************************************************************************************
-     Running the program
-******************************************************************************************
-running: ./ds_array
-*****************************************************************************************/
+/*  Eric Minseo Park 
+    1001018
+    epark03@uoguelph.ca   */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -77,6 +60,11 @@ int main(int argc, char **argv) {
 }
 */
 
+/*
+* int ds_create_array initializes array.bin,
+* mallocs size of long elements, mallocs elements of MAX_ELEMENTS,
+* and writes elements into file. Ends with finish. Returns 0 when success, and -1 when failed.
+*/
 int ds_create_array() {
 	
 	elements = 0;
@@ -113,33 +101,11 @@ int ds_create_array() {
 	
 }
 
-/*Test function*/
-void show_memory() {
-	
-	printf ("Showing memory");
-	ds_test_init();
-	printf ("elements = %ld", elements);
-	
-}
-
-/*Test function*/
-void show_array() {
-	
-	int i;
-	int value;
-	long location;
-	
-	printf ("elements = %ld\n", elements);
-	printf ("Showing array\n");
-	for (i = 0; i < elements; i++) {
-		location = i * sizeof(int) + sizeof(elements);
-		printf ("location: %ld\n", location);
-		ds_read (&value, location, sizeof(int));	
-		printf ("%d %d\n", i, value); 
-	}
-	
-}
-
+/*
+* int ds_init_array ds_inits array.bin, and 
+* reads into elements the first long in file (which should be where element is stored in)
+* returns 0 when success and -1 when fail.
+*/
 int ds_init_array() {
 	
 	if (ds_init ("array.bin") != 0) {
@@ -155,6 +121,10 @@ int ds_init_array() {
 	
 }
 
+/*
+* int ds_replace takes in int value and long index, and finds location (with use of index), and writes into location
+* the value provided. Returns 0 when success, -1 when fail.
+*/
 int ds_replace (int value, long index) {
 	
 	long location;
@@ -174,6 +144,10 @@ int ds_replace (int value, long index) {
 	return 0;
 }
 
+/*
+* int ds_insert takes in int value, long index, and inserrts into array (at location given by index)
+* the value provided. Returns 0 when success, and -1 when fail.
+*/
 int ds_insert (int value, long index) {
 	
 	long oldValue;
@@ -226,6 +200,11 @@ int ds_insert (int value, long index) {
 	return 0;
 }
 
+/*
+* int ds_delete takes long index, and finds location with index
+* and deletes (reads, then writes over) the object at index. 
+* Returns 0 when success, -1 when fail.
+*/
 int ds_delete (long index) {
 	
 	long curr_loc;
@@ -268,6 +247,12 @@ int ds_delete (long index) {
 	return 0;
 }
 
+/*
+* int ds_swap takes in long index1 and long index2 to swap 
+* the values by finding both locations with index1 and index2,
+* then reads and writes the previous values with swapped locations.
+* Returns 0 when success, -1 when fail.
+*/
 int ds_swap (long index1, long index2) {
 	
 	long loc_1;
@@ -299,6 +284,11 @@ int ds_swap (long index1, long index2) {
 	return 0;
 }
 
+/*
+* long ds_finish takes in int target, and scans through
+* array to find match for target, and returns index when success,
+* and -1 when fail.
+*/
 long ds_find (int target) {
 	
 	int i;
@@ -318,6 +308,10 @@ long ds_find (int target) {
 	return -1;
 }
 
+/*
+* int ds_read_elements takes in char filename and reads all elements from read_elements
+* and inserts them into the array. Returns 0 when success, -1 when fail.
+*/
 int ds_read_elements (char *filename) {
 	
 	FILE *fp;
@@ -351,6 +345,10 @@ int ds_read_elements (char *filename) {
 	return 0;
 }
 
+/*
+* int ds_finish_array writes elements into file and calls
+* ds_finish. Returns 0 when success and -1 when fail
+*/
 int ds_finish_array() {
 	
 	if (ds_write (0, &elements, sizeof(long)) == -1) { /*Checks if ds_write fails*/
