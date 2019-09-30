@@ -1,3 +1,24 @@
+/**********************************main.c**************************************************
+Student Name: Eric Minseo Park                                           Email ID: epark03
+Date: September 29, 2019                                                 Course Name: CIS 2520
+
+I asset that this work my own. I have appropriately acknowledged any and all material
+(data, images, ideas or words) that I have used, whether directly quoted or paraphrased.
+Furthermore, I certify that this assignment was prepared by me specifically for this
+course.
+******************************************************************************************/
+
+/*****************************************************************************************
+     Compiling the program
+******************************************************************************************
+The program should be compiled by running the make file:
+compile: make ds_array
+******************************************************************************************
+     Running the program
+******************************************************************************************
+running: ./ds_array
+*****************************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -39,7 +60,7 @@ int main(int argc, char **argv) {
 	ds_read_elements ("test.txt");
 
 	ds_insert (110, 4);
-	ds_replace( 120, 3 );
+	ds_replace(  120, 3 );
 
 	#ifdef DEBUG
 		printf ("Before ds_read_elements\n");
@@ -56,7 +77,7 @@ int main(int argc, char **argv) {
 }
 */
 
-void ds_create_array() {
+int ds_create_array() {
 	
 	elements = 0;
 	long elements_loc;

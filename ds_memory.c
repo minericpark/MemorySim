@@ -1,3 +1,24 @@
+/**********************************main.c**************************************************
+Student Name: Eric Minseo Park                                           Email ID: epark03
+Date: September 29, 2019                                                 Course Name: CIS 2520
+
+I asset that this work my own. I have appropriately acknowledged any and all material
+(data, images, ideas or words) that I have used, whether directly quoted or paraphrased.
+Furthermore, I certify that this assignment was prepared by me specifically for this
+course.
+******************************************************************************************/
+
+/*****************************************************************************************
+     Compiling the program
+******************************************************************************************
+The program should be compiled by running the make file:
+compile: make ds_memory
+******************************************************************************************
+     Running the program
+******************************************************************************************
+running: ./ds_memory
+*****************************************************************************************/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -350,12 +371,18 @@ int ds_finish () {
 			return 0;
 		}
 	}
-	printf ("reads: %d\n", ds_counts.reads);
-	printf ("writes: %d\n", ds_counts.writes);
+	
+		printf ("reads: %d\n", getReads());
+		printf ("writes: %d\n", getWrites());
+	
 	if (fclose (ds_file.fp) == EOF) {
 		return 0;
 	}
 	return (1);
 	
 }
+
+
+
+
 
