@@ -382,8 +382,8 @@ int ds_finish () {
 		}
 	}
 	
-		printf ("reads: %d\n", getReads());
-		printf ("writes: %d\n", getWrites());
+		printf ("reads: %d\n", ds_counts.reads);
+		printf ("writes: %d\n", ds_counts.writes);
 	
 	if (fclose (ds_file.fp) == EOF) {
 		return 0;
