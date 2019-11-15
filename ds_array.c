@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "ds_array.h"
+#include "ds_memory.h"
 /*#define DEBUG*/
 /*#define TEST*/
 
